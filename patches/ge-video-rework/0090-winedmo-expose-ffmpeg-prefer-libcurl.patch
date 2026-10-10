@@ -1,0 +1,29 @@
+--- /tmp/unix_demuxer.c.orig	2026-10-11 15:00:38.490306324 +0200
++++ wine/dlls/winedmo/unix_demuxer.c	2026-10-11 15:49:14.145536264 +0200
+@@ -850,6 +850,7 @@
+     const AVInputFormat *format;
+     struct demuxer *demuxer;
+     int i, ret;
++    const char *prefer_libcurl = getenv("PROTON_FFMPEG_PREFER_LIBCURL");
+ 
+     TRACE( "context %p, url %s, mime %s\n", params->context, debugstr_a(params->url), debugstr_a(params->mime_type) );
+ 
+@@ -888,7 +889,7 @@
+         {
+             /* HTTP HLS segments need not have media filename extensions. Probe
+              * their contents, but never allow remote playlists to open local files. */
+-            av_dict_set( &options, "protocol_whitelist", "http,https,tls,rtp,tcp,udp,crypto,httpproxy,data", 0 );
++            av_dict_set( &options, "protocol_whitelist", "http,https,tls,rtp,tcp,udp,crypto,httpproxy,data,libcurl", 0 );
+             av_dict_set( &options, "extension_picky", "0", 0 );
+         }
+         if (rtsp) av_dict_set( &options, "timeout", "15000000", 0 );
+@@ -902,6 +903,9 @@
+             av_dict_set( &options, "reconnect_delay_max", "5", 0 );
+         }
+ 
++        if (prefer_libcurl && strcmp(prefer_libcurl, "0"))
++            av_dict_set(&options, "prefer_libcurl", "1", 0);
++
+         ret = avformat_open_input( &demuxer->ctx, url, input_format, &options );
+         if (!rtsp && ret == AVERROR_HTTP_FORBIDDEN && !av_dict_get( options, "user_agent", NULL, 0 ))
+         {
