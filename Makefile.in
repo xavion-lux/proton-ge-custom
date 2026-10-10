@@ -296,6 +296,43 @@ $(OBJ)/.bzip2-%-build:
 	cp -a "$(BZIP2_$*_OBJ)/bzlib.h" "$(BZIP2_$*_INCDIR)/"
 	touch $@
 
+LIBCURL_CONFIGURE_ARGS := \
+	--enable-shared \
+	--disable-static \
+	--disable-manual \
+	--disable-doc \
+	--disable-ares \
+	--disable-versioned-symbols \
+	--without-libssh2 \
+	--without-nghttp2 \
+	--with-gnutls \
+	--enable-http \
+	--disable-ftp \
+	--disable-file \
+	--disable-ipfs \
+	--disable-ldap \
+	--disable-ldaps \
+	--disable-rtsp \
+	--enable-proxy \
+	--disable-dict \
+	--disable-telnet \
+	--disable-tftp \
+	--disable-pop3 \
+	--disable-imap \
+	--disable-smb \
+	--disable-smtp \
+	--disable-gopher \
+	--disable-mqtt
+
+$(eval $(call rules-source,libcurl,$(SRCDIR)/libcurl))
+$(eval $(call rules-configure,libcurl,i386,unix))
+$(eval $(call rules-configure,libcurl,x86_64,unix))
+$(eval $(call rules-configure,libcurl,aarch64,unix))
+
+$(OBJ)/.libcurl-post-source:
+	cd "$(LIBCURL_SRC)" && autoreconf -i
+	touch $@
+
 ##
 ## PipeWire ALSA PCM plugin
 ##
@@ -344,7 +381,7 @@ $(OBJ)/.pipewire-alsa-aarch64-build:
 	    $(aarch64_LDFLAGS) $(LDFLAGS)
 	touch $@
 
-FFMPEG_DEPENDS = bzip2 dav1d xz
+FFMPEG_DEPENDS = bzip2 dav1d xz libcurl
 
 FFMPEG_CONFIGURE_ARGS := \
 	--enable-shared \
@@ -362,6 +399,8 @@ FFMPEG_CONFIGURE_ARGS := \
 	--enable-decoders \
 	--enable-encoders \
 	--enable-bsfs \
+	--enable-libcurl \
+	--enable-protocol=libcurl \
 	--disable-decoder=vvc \
 
 FFMPEG_i386-unix_CONFIGURE_ARGS := \
@@ -640,7 +679,7 @@ WINE_x86_64_AUTOCONF_ARGS += \
   VKD3D_PE_CFLAGS="-I$(VULKAN_HEADERS_x86_64_DST)/include -I$(VKD3D_x86_64_DST)/include/vkd3d" \
   VKD3D_PE_LIBS="-L$(VKD3D_x86_64_LIBDIR)/vkd3d/x86_64-windows -l:libvkd3d-1.dll -l:libvkd3d-shader-1.dll -l:libvkd3d-utils-1.dll"
 
-WINE_DEPENDS = ffmpeg openfst kaldi vosk libxml2 libxkbcommon libpcap
+WINE_DEPENDS = ffmpeg openfst kaldi vosk libxml2 libxkbcommon libpcap libcurl
 WINE_i386_DEPENDS = vkd3d
 WINE_x86_64_DEPENDS = piper vkd3d openxr
 WINE_aarch64_DEPENDS = piper openxr
